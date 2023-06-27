@@ -160,32 +160,22 @@ class LRP(nn.Module):
     
     
     def visualize(self, relevance, xlabel='Omics features', ylabel='Nucleotides', save_id='relevance'):
-        plt.rcParams['axes.labelsize'] = 24
-        plt.rcParams['axes.titlesize'] = 24
-        fig, ax = plt.subplots(figsize=(12, 10))
-        for axis in ['top','bottom','left','right']:
-            ax.spines[axis].set_linewidth(5)
-            ax.spines[axis].set_color("black")
-        
-        relevance = relevance.squeeze()
-        if len(relevance.shape) > 2: 
-            print('Input relevance tensor has {0} dimensions, \
-                  when maximum of two is available').format(len(relevance.shape))
-            return None
-        if len(relevance.shape) == 1: relevance.unsqueeze(0)
-        
-        sns.heatmap(relevance.cpu(), cmap="crest", ax=ax)
-        ax.set(xlabel=xlabel, ylabel=ylabel, title='Relevance visualization')
-        plt.savefig('{0}.pdf'.format(save_id, dpi=100))
+        ax = sns.heatmap(relevance.squeeze().cpu(), cmap='twilight')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_title('Relevance visualization')
+        plt.savefig(f'{save_id}.png')
         plt.show()
         return None
         
-    def aggregate(self, dataset, visualize=False):
-        agg_rel = torch.zeros(dataset[0].shape)
-        for sample in dataset:
-            relevance = self.get_features(sample)
-            agg_rel += relevance
-        
-        mean_rel = agg_rel / len(dataset)
-        if visualize: self.visualize(mean_rel, save_id='agg_relevance')
-        return mean_rel
+    def aggregate(self, dataloader, len1, feat):
+        all1 = np.zeros((len1, feat))
+        count = 0
+        for _, (X_batch, y_batch) in enumerate(tqdm.tqdm(dataloader)):
+            x = X_batch.cuda()
+            for i in range(x.shape[0]):
+                count += 1
+                r = self.get_features(x[i].reshape((1,1, x.shape[1], x.shape[2]))).permute(0, 2, 3, 1).sum(dim=-1).squeeze().detach().cpu()
+                all1 += np.array(r)
+        all1 = all1 / count
+        return all1
