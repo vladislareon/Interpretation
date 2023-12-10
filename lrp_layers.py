@@ -173,7 +173,7 @@ class LRP(nn.Module):
     def aggregate(self, dataloader, len1, feat):
         all1 = np.zeros((len1, feat))
         count = 0
-        for _, (X_batch, y_batch) in enumerate(tqdm.tqdm(dataloader)):
+        for _, (X_batch, y_batch) in enumerate(dataloader):
             x = X_batch.cuda()
             for i in range(x.shape[0]):
                 count += 1
