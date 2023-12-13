@@ -109,7 +109,7 @@ class LRP(nn.Module):
                 with torch.no_grad():
                     relevance = self.lrp_linear(act_in, layer.weight, layer.bias, act_out, relevance_history[-1])
                     
-            elif layer.__class__.__name__ in ['Conv2d', 'AvgPool2d', 'MaxPool2d', 'AdaptiveAvgPool2d']:
+            elif layer.__class__.__name__ in ['Conv2d', 'AvgPool2d', 'MaxPool2d', 'AdaptiveAvgPool2d', 'Conv1d']:
                 layer.weight = torch.nn.Parameter(layer.weight.clamp(min=0.0))
                 layer.bias = torch.nn.Parameter(torch.zeros_like(layer.bias))
                 act_out = layer.forward(act_in)
@@ -162,6 +162,9 @@ class LRP(nn.Module):
     
     
     def visualize(self, relevance, xlabel='Omics features', ylabel='Nucleotides', save_id='relevance'):
+        relevance = relevance.squeeze().cpu()
+        if self.layers[0].__class__.__name__ == 'Conv1d':
+          relevance = relevance.T
         ax = sns.heatmap(relevance.squeeze().cpu(), cmap='twilight')
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
