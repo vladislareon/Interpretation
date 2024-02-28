@@ -197,10 +197,10 @@ class LRP(nn.Module):
         plt.show()
         return None
 
-    def aggregate(self, dataset, visualize=False):
+    def aggregate(self, X_batch, y_batch, visualize=False):
         agg_rel = torch.zeros(dataset[0].shape)
-        for sample in dataset:
-            relevance = self.get_features(sample)
+        for (x, y) in (X_batch, y_batch):
+            relevance = self.get_features(x, y)
             agg_rel += relevance
 
         mean_rel = agg_rel / len(dataset)
